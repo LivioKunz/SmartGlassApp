@@ -16,6 +16,10 @@ import ch.pawi.smartglassapp.camera.CameraPreview;
 import ch.pawi.smartglassapp.camera.PhotoHandler;
 
 import org.opencv.*;
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.imgproc.Imgproc;
 
 /**
  * Created by livio on 12.10.2015.
@@ -30,11 +34,46 @@ public class Main extends Activity {
         takePicture();
     }
 
+    //Init OpenCV
+    static {
+        if (!OpenCVLoader.initDebug()) {
+            // Handle initialization error
+        }
+    }
+
+
+    private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            Log.i("loading libs", "OpenCV loading status " + status);
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS: {
+                    Log.i("loading libs", "OpenCV loaded successfully");
+
+                    // Load native library after(!) OpenCV initialization
+                    //System.loadLibrary("native_sample");
+                }
+                break;
+                default: {
+                    super.onManagerConnected(status);
+                }
+                break;
+            }
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this,
+                mOpenCVCallBack);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-
+/*
         try {
             camera = Camera.open();
 
@@ -45,7 +84,7 @@ public class Main extends Activity {
             for(Camera.Size size : sizes){
                 //todo
             }
-            params.setPictureSize(1280, 960);
+            params.setPictureSize(640,  480);
             //params.setPictureSize(2592,1944);
             camera.setParameters(params);
 
@@ -58,9 +97,11 @@ public class Main extends Activity {
             FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
             preview.addView(mPreview);
 
+
+
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
+        }*/
     }
 
     @Override
@@ -91,6 +132,7 @@ public class Main extends Activity {
             // if (ConfigFileReaded == true) {
             camera.takePicture(shutterCallback, rawCallback, jpegCallback);
             camera.startPreview();
+
             // }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -98,6 +140,7 @@ public class Main extends Activity {
     }
 
     public void onClickTakePicture(View view) {
+
         takePicture();
     }
 
@@ -106,7 +149,7 @@ public class Main extends Activity {
      */
     Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         public void onShutter() {
-
+            new MatchingDemo().run("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
         }
     };
 
@@ -130,4 +173,10 @@ public class Main extends Activity {
 
         }
     };
+
+
+
+    public void onClickTemplateMatch(View view) {
+        new MatchingDemo().run("/sdcard/Pawi_Img/schrank_tabasco.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
+    }
 }
