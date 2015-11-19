@@ -73,7 +73,7 @@ public class Main extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
-/*
+
         try {
             camera = Camera.open();
 
@@ -82,18 +82,17 @@ public class Main extends Activity {
             Camera.Parameters params = camera.getParameters();
             List<Camera.Size> sizes = params.getSupportedPictureSizes();
             for(Camera.Size size : sizes){
-                //todo
+
             }
             params.setPictureSize(640,  480);
-            //params.setPictureSize(2592,1944);
             camera.setParameters(params);
 
             // ---------- Ende ------------------
 
-            camera.setDisplayOrientation(90);
+            camera.setDisplayOrientation(0);
             mPreview = new CameraPreview(this, camera);
 
-            // set Preview f�r Camera
+            // set Preview for Camera
             FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
             preview.addView(mPreview);
 
@@ -101,7 +100,7 @@ public class Main extends Activity {
 
         } catch (Exception ex) {
             ex.printStackTrace();
-        }*/
+        }
     }
 
     @Override
@@ -149,7 +148,8 @@ public class Main extends Activity {
      */
     Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         public void onShutter() {
-            new MatchingDemo().run("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
+            //new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_skaliert.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_CCOEFF);
+            new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_bt_skaliert_hintergrund.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_CCOEFF);
         }
     };
 
@@ -177,6 +177,6 @@ public class Main extends Activity {
 
 
     public void onClickTemplateMatch(View view) {
-        new MatchingDemo().run("/sdcard/Pawi_Img/schrank_tabasco.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
+        new MatchingDemo().run("/sdcard/Pawi_Img/schrank_tabasco_1.png", "/sdcard/Pawi_Img/tabasco_skaliert.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
     }
 }

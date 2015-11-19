@@ -17,7 +17,7 @@
             android:text="Template Matching"
             android:id="@+id/btnTestTempMat"
             android:onClick="onClickTemplateMatch"
-            android:layout_gravity="right|top" />
+             />
     </FrameLayout>
 
 
