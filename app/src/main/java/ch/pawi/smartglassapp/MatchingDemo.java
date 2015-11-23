@@ -28,51 +28,54 @@
 
         //ToDo: Better matching, if not found give back false or similar
 
+        //(づ｡◕‿‿◕｡)づ Take my Energy Code (づ｡◕‿‿◕｡)づ
         public void run(String inFile, String templateFile, String outFile, int match_method) {
 
-            System.out.println("\nRunning Template Matching");
-            try {
-                File testi = new File(inFile);
-                if(testi.exists()) {
-                    FileInputStream fis = new FileInputStream(testi);
+            for(int i=0; i < 5; i++) {
+                //Kack Code
+                templateFile = templateFile + i + ".png";
+                System.out.println("\nRunning Template Matching");
+                try {
+                    File testi = new File(inFile);
+                    if (testi.exists()) {
+                        FileInputStream fis = new FileInputStream(testi);
 
 
-                    //Mat img = readInputStreamIntoMat(fis);
-                    Mat img = Imgcodecs.imread(inFile);
-                    Mat templ = Imgcodecs.imread(templateFile);
+                        //Mat img = readInputStreamIntoMat(fis);
+                        Mat img = Imgcodecs.imread(inFile);
+                        Mat templ = Imgcodecs.imread(templateFile);
 
+                        // Create the result matrix
+                        int result_cols = img.cols() - templ.cols() + 1;
+                        int result_rows = img.rows() - templ.rows() + 1;
+                        Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
 
-                    // Create the result matrix
-                    int result_cols = img.cols() - templ.cols() + 1;
-                    int result_rows = img.rows() - templ.rows() + 1;
-                    Mat result = new Mat(result_rows, result_cols, CvType.CV_32FC1);
+                        // Do the Matching and Normalize
+                        Imgproc.matchTemplate(img, templ, result, match_method);
+                        Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
 
-                    // Do the Matching and Normalize
-                    Imgproc.matchTemplate(img, templ, result, match_method);
-                    Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+                        // / Localizing the best match with minMaxLoc
+                        MinMaxLocResult mmr = Core.minMaxLoc(result);
 
-                    // / Localizing the best match with minMaxLoc
-                    MinMaxLocResult mmr = Core.minMaxLoc(result);
+                        Point matchLoc;
+                        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+                            matchLoc = mmr.minLoc;
+                        } else {
+                            matchLoc = mmr.maxLoc;
+                        }
 
-                    Point matchLoc;
-                    if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
-                        matchLoc = mmr.minLoc;
-                    } else {
-                        matchLoc = mmr.maxLoc;
+                        // Show me what you got
+                        Imgproc.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
+                                matchLoc.y + templ.rows()), new Scalar(0, 255, 0));
+
+                        // Save the visualized detection.
+                        //Toast.makeText(this, "Output: " + outFile, Toast.LENGTH_SHORT).show();
+                        System.out.println("Writing " + outFile);
+                        Imgcodecs.imwrite(outFile, img);
                     }
-
-                    // Show me what you got
-                    Imgproc.rectangle(img, matchLoc, new Point(matchLoc.x + templ.cols(),
-                            matchLoc.y + templ.rows()), new Scalar(0, 255, 0));
-
-                    // Save the visualized detection.
-                    //Toast.makeText(this, "Output: " + outFile, Toast.LENGTH_SHORT).show();
-                    System.out.println("Writing " + outFile);
-                    Imgcodecs.imwrite(outFile, img);
+                } catch (Exception ex) {
+                    System.out.println("Error: " + ex.getMessage());
                 }
-            }
-            catch(Exception ex){
-                System.out.println("Error: " + ex.getMessage());
             }
         }
 
