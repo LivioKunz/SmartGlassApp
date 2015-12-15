@@ -11,21 +11,15 @@
         android:layout_height="fill_parent"
         android:layout_weight="1"         >
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Template Matching"
-            android:id="@+id/btnTestTempMat"
-            android:onClick="onClickTemplateMatch"
-             />
+
     </FrameLayout>
-
-
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Take Picture"
         android:id="@+id/btnTakePicture"
         android:onClick="onClickTakePicture" />
+
+
 
 </RelativeLayout>

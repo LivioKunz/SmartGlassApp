@@ -24,6 +24,7 @@ import org.opencv.*;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 /**
@@ -154,22 +155,20 @@ public class Main extends Activity {
 
     }
 */
-    public void onClickTakePicture(View view) {
-
-        takePicture();
+    public void onClickTakePicture(View view) throws InterruptedException {
+        MatchingDemo match = MatchingDemo.getInstance();
+        boolean objectFound = false;
+        //while(!objectFound){
+            takePicture();
+            objectFound = match.run("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/orb");
+        //}
     }
 
     /**
      * Picture Callback beim shutter
      */
     Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
-        public void onShutter() {
-            try {
-                tempalteMatching();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        public void onShutter() { }
     };
 
     /**
@@ -188,18 +187,10 @@ public class Main extends Activity {
         public void onPictureTaken(byte[] data, Camera camera) {
             photoHandler = new PhotoHandler(getApplicationContext());
             photoHandler.onPictureTaken(data, camera);
-
-
         }
     };
 
-    private void tempalteMatching() throws InterruptedException {
 
-        new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_1512.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_SQDIFF_NORMED);
-        //Intent i = new Intent(Intent.ACTION_VIEW);
-        //i.setDataAndType(Uri.parse("file:///sdcard/Pawi_Img/out_tobasco_camera.png"), "image/jpeg");
-        //startActivity(i);
-    }
 
     public void tcpIPConnection(){
         new Thread(new Runnable() {

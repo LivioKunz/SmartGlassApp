@@ -1,7 +1,11 @@
     package ch.pawi.smartglassapp;
 
+    import android.graphics.Bitmap;
+    import android.os.Environment;
+    import android.widget.ImageView;
     import android.widget.Toast;
 
+    import org.opencv.android.Utils;
     import org.opencv.core.Core;
     import org.opencv.core.Core.MinMaxLocResult;
     import org.opencv.core.CvType;
@@ -37,133 +41,130 @@
     import java.util.List;
 
 
+
+
     /**
      * Created by livio on 14.11.2015.
      */
     public class MatchingDemo {
 
+        private static MatchingDemo instance = null;
+        protected MatchingDemo() {
+            // Exists only to defeat instantiation.
+        }
 
-        //ToDo: Better matching, if not found give back false or similar
-        //(づ｡◕‿‿◕｡)づ Take my Energy Code (づ｡◕‿‿◕｡)づ
-        public void run(String inFile, String templateFile, String outFile, int match_method) throws InterruptedException {
+        public static MatchingDemo getInstance() {
+            if(instance == null) {
+                instance = new MatchingDemo();
+            }
+            return instance;
+        }
+
+        public  boolean foundObject;
+
+        public boolean run(String inFile, String templateFile, String outFile) throws InterruptedException {
+            foundObject=false;
 
 
-
-            //Test Tabasco
-            ORB(inFile, templateFile, outFile);
-
-
-            //Test Ravioli
-            ORB(inFile, "/sdcard/Pawi_Img/Ravioli1.jpg", outFile);
-            //To compate more than one Picture
-            //TemplateMatching(inFile, templateFile, outFile,match_method);
-
-            ORB(inFile, "/sdcard/Pawi_Img/Zucker.png", outFile);
+                //ToDo: Only one Object is to search
+                //ORB(inFile, "/sdcard/Pawi_Img/zucker.png", outFile);
+                //ORB(inFile, "/sdcard/Pawi_Img/ravioli.png", outFile);
+                ORB(inFile, "/sdcard/Pawi_Img/tabasco.png", outFile);
 
             System.out.println("-------------------------------------------------");
             System.out.println("Matching finished");
-
+            System.out.println("-------------------------------------------------");
+            return foundObject;
         }
 
         private void ORB(String inFile, String templateFile, String outFile){
 
-            int MIN_MATCH_COUNT = 5;
+            try {
+                int MIN_MATCH_COUNT = 15;
 
+                FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
+                DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+                DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 
-            FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
-            DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.ORB);;
-            DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+                Mat img = Imgcodecs.imread(inFile);
+                Mat templ = Imgcodecs.imread(templateFile);
 
-            Mat img = Imgcodecs.imread(inFile);
-            Mat templ = Imgcodecs.imread(templateFile);
+                // template
+                Imgproc.cvtColor(templ, templ, Imgproc.COLOR_RGB2GRAY);
+                Mat descriptors1 = new Mat();
+                MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
 
-            // First photo
-            Imgproc.cvtColor(templ, templ, Imgproc.COLOR_RGB2GRAY);
-            Mat descriptors1 = new Mat();
-            MatOfKeyPoint keypoints1 = new MatOfKeyPoint();
+                detector.detect(templ, keypoints1);
+                descriptor.compute(templ, keypoints1, descriptors1);
 
-            detector.detect(templ, keypoints1);
-            descriptor.compute(templ, keypoints1, descriptors1);
+                //Aufgenommenes Photo
+                Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY);
+                Mat descriptors2 = new Mat();
+                MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
 
-            Imgproc.cvtColor(img, img, Imgproc.COLOR_RGB2GRAY);
-            Mat descriptors2 = new Mat();
-            MatOfKeyPoint keypoints2 = new MatOfKeyPoint();
+                detector.detect(img, keypoints2);
+                descriptor.compute(img, keypoints2, descriptors2);
 
-            detector.detect(img, keypoints2);
-            descriptor.compute(img, keypoints2, descriptors2);
+                MatOfDMatch matches = new MatOfDMatch();
+                MatOfDMatch filteredMatches = new MatOfDMatch();
+                matcher.match(descriptors1, descriptors2, matches);
 
-            MatOfDMatch matches = new MatOfDMatch();
-            MatOfDMatch filteredMatches = new MatOfDMatch();
-            matcher.match(descriptors1, descriptors2, matches);
+                // Linking
+                Scalar RED = new Scalar(255, 0, 0);
+                Scalar GREEN = new Scalar(0, 255, 0);
 
-            // Linking
-            Scalar RED = new Scalar(255,0,0);
-            Scalar GREEN = new Scalar(0,255,0);
+                List<DMatch> matchesList = matches.toList();
+                Double max_dist = 0.0;
+                Double min_dist = 100.0;
 
-            List<DMatch> matchesList = matches.toList();
-            Double max_dist = 0.0;
-            Double min_dist = 50.0;
-
-            for(int i = 0;i < matchesList.size(); i++){
-                Double dist = (double) matchesList.get(i).distance;
-                if (dist < min_dist)
-                    min_dist = dist;
-                if ( dist > max_dist)
-                    max_dist = dist;
-            }
-
-
-
-/*
-            // Log.e("Max_dist,Min_dist", "Max="+max_dist+", Min="+min_dist);
-            List<DMatch> good_matches = new ArrayList<DMatch>();
-            double good_dist = 3*min_dist;
-            for(int i =0;i<row_count; i++)          {
-                if(matches.get(i).distance<good_dist)                {
-                    good_matches.add(matches.get(i));
-                    //Log.e("good_matches", "good_match_id="+matches.get(i).trainIdx);
+                //Max und Min Distanz zwischen Keypoints berechnen
+                for (int i = 0; i < matchesList.size(); i++) {
+                    Double dist = (double) matchesList.get(i).distance;
+                    if (dist < min_dist)
+                        min_dist = dist;
+                    if (dist > max_dist)
+                        max_dist = dist;
                 }
-            }*/
 
+                System.out.println("Min_dist: " + min_dist);
+                System.out.println("Max_dist: " + max_dist);
 
-            LinkedList<DMatch> good_matches = new LinkedList<DMatch>();
-            for(int i = 0;i < matchesList.size(); i++){
-                if (matchesList.get(i).distance <= (1.5 * min_dist))
-                    good_matches.addLast(matchesList.get(i));
-            }
-
-
-            // Printing
-            MatOfDMatch goodMatches = new MatOfDMatch();
-            goodMatches.fromList(good_matches);
-
-            System.out.println(matches.size() + " " + goodMatches.size());
-
-            Mat outputImg = new Mat();
-            MatOfByte drawnMatches = new MatOfByte();
-            Features2d.drawMatches(templ, keypoints1, img, keypoints2, goodMatches, outputImg, GREEN, RED, drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
-
-
-            //Features2d.drawKeypoints(img, keypoints2, outputImg);
-
-            //Features2d.drawMatches(templ, keypoints1, img, keypoints2, goodMatches, outputImg);
-            //Draw Lines around detected object
-            ArrayList<Point> obj_corners = new ArrayList<>(4);
-
-            //Wenn genügend viele Matches gefunden wurden wird Resultat ausgegeben
-            if(good_matches.size() >= MIN_MATCH_COUNT) {
-
-                Date d = new Date();
-                if(templateFile.contains("ravioli")){
-                    Imgcodecs.imwrite("/sdcard/Pawi_Img/orb/_"+ d.getTime() + ".png", outputImg);
+                //Überprüfen ob mateches eine distanz von nicht höher als 1.5 mal die min Distanz haben. Falls Ja guter Match
+                LinkedList<DMatch> good_matches = new LinkedList<DMatch>();
+                for (int i = 0; i < matchesList.size(); i++) {
+                    if (matchesList.get(i).distance <= (1.25 * min_dist))
+                        good_matches.addLast(matchesList.get(i));
                 }
-                else {
-                    Imgcodecs.imwrite("/sdcard/Pawi_Img/orb/" + d.getTime() + ".png", outputImg);
+
+                // Printing
+                MatOfDMatch goodMatches = new MatOfDMatch();
+                goodMatches.fromList(good_matches);
+
+                System.out.println(matches.size() + " " + goodMatches.size());
+
+                Mat outputImg = new Mat();
+                MatOfByte drawnMatches = new MatOfByte();
+                Features2d.drawMatches(templ, keypoints1, img, keypoints2, goodMatches, outputImg, GREEN, RED, drawnMatches, Features2d.NOT_DRAW_SINGLE_POINTS);
+
+                ArrayList<Point> obj_corners = new ArrayList<>(4);
+
+                //Wenn genügend viele Matches gefunden wurden wird Resultat ausgegeben
+                if (good_matches.size() >= MIN_MATCH_COUNT) {
+                    try {
+                        Date d = new Date();
+                        Imgcodecs.imwrite("/sdcard/Pawi_Img/orb/" + d.getTime() + ".png", outputImg);
+                        foundObject = true;
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
+
+
+
+            }catch(Exception ex){
+                ex.printStackTrace();
             }
         }
-
-
 
         private void TemplateMatching(String inFile, String templateFile, String outFile, int match_method){
             System.out.println("\nRunning Template Matching");
