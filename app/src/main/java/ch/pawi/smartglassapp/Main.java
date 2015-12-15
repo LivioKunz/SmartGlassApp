@@ -1,7 +1,10 @@
 package ch.pawi.smartglassapp;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.hardware.Camera;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -10,10 +13,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import java.io.ObjectInputStream;
 import java.util.List;
 
 import ch.pawi.smartglassapp.camera.CameraPreview;
 import ch.pawi.smartglassapp.camera.PhotoHandler;
+import foodfinder.hslu.ch.foodfinderapp.entity.Product;
 
 import org.opencv.*;
 import org.opencv.android.BaseLoaderCallback;
@@ -29,6 +34,9 @@ public class Main extends Activity {
     private Camera camera;
     private CameraPreview mPreview;
     private PhotoHandler photoHandler;
+    private boolean connected;
+
+    TCPServer server;
 
     private void main(String[] args){
         takePicture();
@@ -65,14 +73,15 @@ public class Main extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this,
-                mOpenCVCallBack);
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mOpenCVCallBack);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        tcpIPConnection();
 
         try {
             camera = Camera.open();
@@ -81,14 +90,11 @@ public class Main extends Activity {
 
             Camera.Parameters params = camera.getParameters();
             List<Camera.Size> sizes = params.getSupportedPictureSizes();
-            for(Camera.Size size : sizes){
-
-            }
+            for(Camera.Size size : sizes){}
             params.setPictureSize(640,  480);
             camera.setParameters(params);
 
             // ---------- Ende ------------------
-
             camera.setDisplayOrientation(0);
             mPreview = new CameraPreview(this, camera);
 
@@ -138,6 +144,16 @@ public class Main extends Activity {
         }
     }
 
+    /*
+    private void waitForProduct(){
+        Product p = new Product();
+        //p = server.recieve();
+
+        takePicture();
+        //Matchingdemo aufrufen mit bild von erhaltenem proudkt
+
+    }
+*/
     public void onClickTakePicture(View view) {
 
         takePicture();
@@ -148,8 +164,11 @@ public class Main extends Activity {
      */
     Camera.ShutterCallback shutterCallback = new Camera.ShutterCallback() {
         public void onShutter() {
-            //new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_skaliert.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_CCOEFF);
-            new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_bt_skaliert_hintergrund.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_CCOEFF);
+            try {
+                tempalteMatching();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     };
 
@@ -163,7 +182,7 @@ public class Main extends Activity {
     };
 
     /**
-     * Picture Callback f�r jpeg.
+     * Picture Callback für jpeg.
      */
     Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -174,9 +193,20 @@ public class Main extends Activity {
         }
     };
 
+    private void tempalteMatching() throws InterruptedException {
 
+        new MatchingDemo().run("/sdcard/Pawi_Img/picture.jpg", "/sdcard/Pawi_Img/tabasco_1512.png", "/sdcard/Pawi_Img/out_tobasco_camera.png", Imgproc.TM_SQDIFF_NORMED);
+        //Intent i = new Intent(Intent.ACTION_VIEW);
+        //i.setDataAndType(Uri.parse("file:///sdcard/Pawi_Img/out_tobasco_camera.png"), "image/jpeg");
+        //startActivity(i);
+    }
 
-    public void onClickTemplateMatch(View view) {
-        new MatchingDemo().run("/sdcard/Pawi_Img/schrank_tabasco_1.png", "/sdcard/Pawi_Img/tabasco_skaliert.png", "/sdcard/Pawi_Img/out_tobasco.png", Imgproc.TM_CCOEFF);
+    public void tcpIPConnection(){
+        new Thread(new Runnable() {
+            public void run() {
+              server = new TCPServer(8080);
+              server.run();
+            }
+        }).start();
     }
 }
