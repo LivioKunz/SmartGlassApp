@@ -153,6 +153,7 @@
         //Template Matching verlgeicht ein TEmplate Bild mit dem aufegnommenen Bild und versucht dieses wiederzuerkennen
         //Template Matching wurde verworfen da der Threshold zur bestimmung ob das Objekt auf dem Bild vorhanden ist nicht genügend
         //genau defniert werden konnte.
+        //Wird nichtmehr benuttz
         private void TemplateMatching(String inFile, String templateFile, String outFile, int match_method){
             System.out.println("\nRunning Template Matching");
             try {
