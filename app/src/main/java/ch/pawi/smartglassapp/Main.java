@@ -1,31 +1,22 @@
 package ch.pawi.smartglassapp;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.hardware.Camera;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import java.io.ObjectInputStream;
 import java.util.List;
 
 import ch.pawi.smartglassapp.camera.CameraPreview;
 import ch.pawi.smartglassapp.camera.PhotoHandler;
-import foodfinder.hslu.ch.foodfinderapp.entity.Product;
 
-import org.opencv.*;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 /**
  * Created by livio on 12.10.2015.
@@ -155,12 +146,14 @@ public class Main extends Activity {
 
     }
 */
+    //ToDo: 30 sek lang iterierung machen
+
     public void onClickTakePicture(View view) throws InterruptedException {
-        MatchingDemo match = MatchingDemo.getInstance();
+        ObjectMatching match = ObjectMatching.getInstance();
         boolean objectFound = false;
         //while(!objectFound){
             takePicture();
-            objectFound = match.run("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/orb");
+            objectFound = match.start("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/orb");
         //}
     }
 
@@ -200,4 +193,23 @@ public class Main extends Activity {
             }
         }).start();
     }
+
+    //Timer 30 Sekunden
+    //Wenn Objekt gefunden wird abbruch ansonsten nach 30 sek abbruch
+    private Runnable timer  = new Runnable(){
+        public void run(){
+            ObjectMatching match = ObjectMatching.getInstance();
+
+            for(int i=0; i<=60; i++){
+                try{
+                takePicture();
+                    if(match.start("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/orb")){
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
 }
