@@ -1,18 +1,22 @@
 package ch.pawi.smartglassapp;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.util.List;
 
 import ch.pawi.smartglassapp.camera.CameraPreview;
 import ch.pawi.smartglassapp.camera.PhotoHandler;
+import foodfinder.hslu.ch.foodfinderapp.entity.Product;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -26,7 +30,10 @@ public class Main extends Activity {
     private Camera camera;
     private CameraPreview mPreview;
     private PhotoHandler photoHandler;
-    private boolean connected;
+    private boolean objectFound;
+    private TextView txtView;
+
+    private Product product;
 
     TCPServer server;
 
@@ -73,7 +80,12 @@ public class Main extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
+        txtView = (TextView) findViewById(R.id.textView);
+        txtView.setTextColor(Color.RED);
+
         tcpIPConnection();
+        txtView.setText("Online");
+        txtView.setTextColor(Color.GREEN);
 
         try {
             camera = Camera.open();
@@ -185,11 +197,25 @@ public class Main extends Activity {
 
 
 
+    //Server instanzieren und starten -> Warten auf Client verbindung
     public void tcpIPConnection(){
         new Thread(new Runnable() {
             public void run() {
-              server = new TCPServer(8080);
-              server.run();
+                product = null;
+                //Port 8080, IP egal da Server und nicht Client
+              server = TCPServer.getInstance();
+                server.setPort(8080);
+                server.run();
+
+                    if(server.getInput() != null){
+                        if(server.getInput().isConnected()){
+
+                            product = server.receive();
+                            if (product != null) {
+                                timer.run();
+                            }
+                    }
+                }
             }
         }).start();
     }
@@ -200,16 +226,27 @@ public class Main extends Activity {
         public void run(){
             ObjectMatching match = ObjectMatching.getInstance();
 
-            for(int i=0; i<=60; i++){
+            //Zeit wielange nach Objekt gesucht werden soll
+            for(int i=0; i<=5; i++){
                 try{
                 takePicture();
-                    if(match.start("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/tabasco.png", "/sdcard/Pawi_Img/orb")){
+                    if(match.start("/sdcard/Pawi_Img/picture.png", "/sdcard/Pawi_Img/" + product.getName() + ".png", "/sdcard/Pawi_Img/orb")){
+                        //Antwort an Server senden
+                        server = TCPServer.getInstance();
+                        server.send(true);
+                        objectFound = true;
                         break;
                     }
-                } catch (InterruptedException e) {
+                    SystemClock.sleep(1000);
+                } catch(InterruptedException e){
                     e.printStackTrace();
                 }
             }
+            if(!objectFound) {
+                server.send(false);
+                objectFound = false;
+            }
+            tcpIPConnection();
         }
     };
 }
