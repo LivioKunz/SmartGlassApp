@@ -16,6 +16,8 @@ import java.util.List;
 
 import ch.pawi.smartglassapp.camera.CameraPreview;
 import ch.pawi.smartglassapp.camera.PhotoHandler;
+import ch.pawi.smartglassapp.communication.TCPServer;
+import ch.pawi.smartglassapp.detection.ObjectMatching;
 import foodfinder.hslu.ch.foodfinderapp.entity.Product;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -246,7 +248,7 @@ public class Main extends Activity {
                 server.send(false);
                 objectFound = false;
             }
-            tcpIPConnection();
+
         }
     };
 }

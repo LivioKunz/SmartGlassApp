@@ -1,4 +1,4 @@
-package ch.pawi.smartglassapp;
+package ch.pawi.smartglassapp.communication;
 
 import foodfinder.hslu.ch.foodfinderapp.entity.Product;
 import java.io.IOException;

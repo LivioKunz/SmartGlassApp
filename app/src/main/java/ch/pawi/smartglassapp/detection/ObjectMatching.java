@@ -1,4 +1,4 @@
-    package ch.pawi.smartglassapp;
+    package ch.pawi.smartglassapp.detection;
 
     import org.opencv.core.Core;
     import org.opencv.core.Core.MinMaxLocResult;
@@ -26,7 +26,7 @@
 
 
     /**
-     * Created by Livio Kunz on 14.11.2015.
+     * Created by Livio Kunz on 24.10.2015.
      */
     public class ObjectMatching {
 
